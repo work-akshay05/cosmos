@@ -19,8 +19,9 @@ spec:
       labels:
         app: sandbox
     spec:
+      serviceAccountName: resource-manager
       containers:
-        - image: sandbox:latest
+        - image: akshay5304/sandbox:latest
           name: main-sandbox-container
           resources:
             limits:

@@ -18,7 +18,7 @@ app.get(["/api/sandbox/health", "/api/sandbox/health/"], (req, res) => {
 
 app.post("/api/sandbox/start",async (req,res)=>{
   const sandboxId=uuid();
-  await promise.all([
+  await Promise.all([
     createPod(sandboxId),
     createService(sandboxId)
   ])
