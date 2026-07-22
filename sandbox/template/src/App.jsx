@@ -6,7 +6,7 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
-
+  console.log("new image se bana hai")
   return (
     <>
       <section id="center">

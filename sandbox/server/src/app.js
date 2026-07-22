@@ -26,7 +26,7 @@ app.post("/api/sandbox/start",async (req,res)=>{
   return res.status(200).json({
     message:"Sandbox started successfully",
     sandboxId:sandboxId,
-    previewUrl:`http://${sandboxId}.localhost`
+    previewUrl:`http://${sandboxId}.preview.localhost`
   })
 })
 

@@ -12,8 +12,8 @@ export async function createPod(sandboxId) {
     spec: {
       containers: [
         {
-          image: "template",
-          imagePullPolicy: "IfNotPresent",
+            image: "akshay5304/template:v3",
+            imagePullPolicy: "IfNotPresent",
           name: "sandbox-container",
           ports: [{ containerPort: 5173, name: "http" }],
           resources: {
