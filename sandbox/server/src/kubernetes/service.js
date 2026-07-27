@@ -20,6 +20,12 @@ export const createService = async (sandboxId) => {
           name: "http",
           protocol: "TCP",
         },
+        {
+          port: 3000,
+          targetPort: 3000,
+          name: "agent-http",
+          protocol: "TCP",
+        },
       ],
       type: "ClusterIP",
     },

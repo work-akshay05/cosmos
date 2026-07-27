@@ -10,9 +10,29 @@ export async function createPod(sandboxId) {
       },
     },
     spec: {
+      volumes: [
+        {
+          name: "workspace-volume",
+          emptyDir: {},
+        }
+      ],
+      initContainers: [
+        {
+            name: "init-container",
+            image:"akshay5304/template:v5",
+            imagePullPolicy: "IfNotPresent",
+            command: ["sh", "-c", "cp -r /workspace/. /seed/"],
+            volumeMounts: [
+                {
+                  name: "workspace-volume",
+                  mountPath: "/seed",
+                }
+            ]
+        }
+      ],
       containers: [
         {
-            image: "akshay5304/template:v3",
+            image: "akshay5304/template:v5",
             imagePullPolicy: "IfNotPresent",
           name: "sandbox-container",
           ports: [{ containerPort: 5173, name: "http" }],
@@ -26,12 +46,38 @@ export async function createPod(sandboxId) {
               memory: "512Mi",
             },
           },
+          volumeMounts:[
+            {
+              name:"workspace-volume",
+              mountPath:'/workspace'
+            }
+          ]
+        },
+        {
+          image: "akshay5304/agent:v1",
+          imagePullPolicy: "IfNotPresent",
+          name: "agent-container",
+          ports: [{ containerPort: 5173, name: "http" }],
+          resources: {
+            limits: {
+              cpu: "500m",
+              memory: "1Gi",
+            },
+            requests: {
+              cpu: "250m",
+              memory: "512Mi",
+            },
+          },
+          volumeMounts:[
+            {
+              name:"workspace-volume",
+              mountPath:'/workspace'
+            }
+          ]
         },
       ],
     },
-    // kissi or ke pod ko dusra user access kr skta hai
-    // usske lie gVisor use krte hai (agar scale chota ho to)
-    // varna hum firecracker use krte hai
+
   };
 
     console.log("Namespace:", k8sNamespace);
