@@ -2,10 +2,12 @@ import express from "express";
 import morgan from "morgan";
 import fs from "fs";
 import path from "path";
+import cors from "cors";
 
 const workingDirectory = "/workspace";
 
 const app = express();
+app.use(cors({ methods: ["GET","POST","PATCH","DELETE"], origin: "*" }));
 app.use(morgan("dev"));
 app.use(express.json());
 

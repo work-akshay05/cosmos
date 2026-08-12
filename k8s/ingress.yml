@@ -39,6 +39,7 @@ spec:
                 name: router-service
                 port:
                   number: 80
+
     - host: "*.agent.localhost"
       http:
         paths:
