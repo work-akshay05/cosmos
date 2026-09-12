@@ -4,10 +4,10 @@ import fs from "fs";
 import path from "path";
 import cors from "cors";
 
-const workingDirectory = "/workspace";
+const WORKING_DIR = "/workspace";
 
 const app = express();
-app.use(cors({ methods: ["GET","POST","PATCH","DELETE"], origin: "*" }));
+app.use(cors({ methods: ["GET", "POST", "PATCH", "DELETE"], origin: "*" }));
 app.use(morgan("dev"));
 app.use(express.json());
 
@@ -23,9 +23,9 @@ app.get("/", (req, res) => {
  *@description List all files in the working directory and its subdirectores. Returns a JSON Object with the file path relative to the working directory. exclude directories like node_modules and .git ,dist etc.
  * -eg:{
  *  "files":[
- *   "file1.txt",
- *  "subdir/file2.txt",
- *  "subdir/subsubdir/file3.txt"
+  *   "file1.txt",
+  *  "subdir/file2.txt",
+  *  "subdir/subsubdir/file3.txt"
  *   ]
  * }
  */
@@ -56,7 +56,7 @@ app.get("/list-files", async (req, res) => {
   };
 
   try {
-    const files = await listFiles(workingDirectory);
+    const files = await listFiles(WORKING_DIR);
 
     return res.status(200).json({
       files,
@@ -71,11 +71,17 @@ app.get("/list-files", async (req, res) => {
   }
 });
 
-app.get("/read-file", async (req, res) => {
+/**
+ * @routes GET/read-files
+ * @description reads the content of all files requested in the query parameters files and return the content as a JSON object
+ * 
+ * eg  /read-files?files=file1.txt,/src/file2.txt
+ */
+app.get("/read-files", async (req, res) => {
   const files = req.query.files;
   if (!files) {
     return res.status(400).json({
-      message: "files query parameter is required",
+      message: "no files specified in query paramets",
       status: "error",
     });
   }
@@ -83,18 +89,15 @@ app.get("/read-file", async (req, res) => {
   const fileList = files.split(",");
   const results = await Promise.all(
     fileList.map(async (file) => {
-      const filePath = `${workingDirectory}/${file}`;
+      const filePath = `${WORKING_DIR}/${file}`;
       try {
         const content = await fs.promises.readFile(filePath, "utf-8");
         return {
-          filePath,
-          content,
+          [filePath]: content,
         };
       } catch (err) {
-        console.log(`Error reading file ${filePath}:`, err);
         return {
-          filePath,
-          error: err.message,
+          [filePath]: `Error reading files: ${err.message}`,
         };
       }
     }),
@@ -107,21 +110,26 @@ app.get("/read-file", async (req, res) => {
   });
 });
 
-app.patch("/update-file", async (req, res) => {
+/**
+ * @routes PATCH /update-files
+ * @description updates the content of files specified in the request body. The request body should contain a property 'updates' with a JSON object, each object should have a 'file' property specifiying the file path (relative to the working directory) and a 'content property specifying the new content for the file.
+ */
+
+app.patch("/update-files", async (req, res) => {
   const updates = req.body.updates;
 
   if (!updates || !Array.isArray(updates)) {
     return res.status(400).json({
       message:
         'invalid request body. expected a json object with an "updates" property containing an array of file updates',
-      error: "error",
+      status: "error",
     });
   }
 
   const results = await Promise.all(
     updates.map(async (update) => {
-      const { filepath, content } = update;
-      const filePath = path.join(workingDirectory, filepath);
+      const { file, content } = update;
+      const filePath = path.join(WORKING_DIR, file);
       try {
         await fs.promises.writeFile(filePath, content, "utf-8");
         return {
@@ -129,7 +137,7 @@ app.patch("/update-file", async (req, res) => {
         };
       } catch (err) {
         return {
-          [filePath]: `error updating file:${err}`,
+          [filePath]: `error updating file:${err.message}`,
         };
       }
     }),
@@ -142,30 +150,35 @@ app.patch("/update-file", async (req, res) => {
   });
 });
 
-app.post("/create-file", async (req, res) => {
+/**
+ * @routes POST /create-files
+ * @description creates new files with the content specified in the request body. The request body should contain a property 'files' with a JSON object, each object should have a 'file' property specifiying the file path (relative to the working directory) and a 'content property specifying the content for the new file.
+ */
+
+app.post("/create-files", async (req, res) => {
   const files = req.body.files;
 
   if (!files || !Array.isArray(files)) {
     return res.status(400).json({
       message:
         'invalid request body. expected a json object with a "files" property containing an array of file paths',
-      error: "error",
+      status: "error",
     });
   }
 
   const result = await Promise.all(
     files.map(async (fileObj) => {
       const { file, content } = fileObj;
-      const filePath = path.join(workingDirectory, file);
+      const filePath = path.join(WORKING_DIR, file);
       try {
-        await fs.promises.mkdir(path.dirname(filePath),{recursive:true});
+        await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
         await fs.promises.writeFile(filePath, content, "utf-8");
         return {
-          [file]: "file created successfully",
+          [filePath]: "file created successfully",
         };
       } catch (err) {
         return {
-          [file]: `error creating file:${err}`,
+          [filePath]: `error creating file:${err.message}`,
         };
       }
     }),
